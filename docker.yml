@@ -1,0 +1,57 @@
+- hosts: localhost
+  vars:
+  - container_name: "docker_os1"
+  - image_name: "httpd"
+  tasks:
+  - name: "Docker Repo"
+    yum_repository:
+      name: "Docker"
+      description: "Docker YUM REPO"
+      baseurl: "https://download.docker.com/linux/centos/7/x86_64/stable"
+      gpgcheck: no
+
+  - name: "Docker Library"
+    pip:
+      name: "docker"
+
+
+  - name: "Docker Install"
+    shell: "yum install docker-ce --nobest -y"
+
+  - name: "Docker services"
+    service:
+      name: "docker"
+      state: started
+
+  - name: "Pull Docker container"
+    docker_image:
+      name: "{{ image_name }}"
+      source: pull
+
+  - name: "Start Container- {{ container_name }}"
+    docker_container:
+       name: "{{ container_name}}"
+       state: started
+       image: "{{ image_name }}"
+       interactive: yes
+       detach: yes
+       ports:
+        -  "8080:80"
+       volumes:
+        - /var/www/html:/usr/local/apache2/htdocs/
+
+  - docker_container_info:
+       name: "{{ container_name }}"
+    register: y
+
+  - debug:
+       var: y.container.NetworkSettings.IPAddress
+
+  - name: "Copying the web page......"
+    copy:
+       dest: "/var/www/html/index.html"
+       content: "It works all fine. Congrats!!!"
+
+  - name: "Stopping SELinux"
+    shell: "setenforce 0"
+ 
