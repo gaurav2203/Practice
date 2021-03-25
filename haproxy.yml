@@ -1,0 +1,31 @@
+- hosts: localhost
+  vars:
+    - packages:
+         - httpd
+         - haproxy
+  tasks:
+    - name: "Installing webserver"
+      package:
+        name: "{{ item }}"
+        state: present
+      loop: 
+        - httpd
+        - haproxy
+
+    - name: "Configuring the config file for haproxy"
+      template:
+        src: "/root/Ansible/Practice/haproxy.cfg"
+        dest: "/etc/haproxy/haproxy.cfg"
+
+    - name: "Starting websever"
+      service:
+        name: "{{ item }}"
+        state: started
+      loop:
+        - httpd
+        - haproxy
+
+    - name: "Copying web pages"
+      copy:
+        dest: "/var/www/html/index.html"
+        content: "This is test page"
